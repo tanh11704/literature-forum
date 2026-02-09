@@ -41,3 +41,5 @@ application:
       expiration: 86400000 # 1 ngày (ms)
       refresh-token:
         expiration: 604800000
+    google:
+      client-id: test-google-client-id
