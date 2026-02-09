@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #000000;
+  --color-surface: #09090b; /* Zinc-950 */
+
+  /* Màu chủ đạo (Violet Neon) */
+  --color-primary: #7c3aed; /* class: text-primary, bg-primary */
+  --color-primary-glow: #8b5cf6; /* class: text-primary-glow */
+  --color-primary-dim: #4c1d95; /* class: text-primary-dim */
+
+  /* Màu trạng thái */
+  --color-danger: #ef4444; /* Red-500 */
+  --color-success: #22c55e; /* Green-500 */
+
+  /* Màu chữ Terminal */
+  --color-terminal: #e4e4e7; /* Zinc-200 */
+
+  /* 2. FONT CHỮ */
+  /* Ghi đè font mặc định */
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* 3. HIỆU ỨNG (SHADOWS) */
+  --shadow-neon: 0 0 10px rgba(124, 58, 237, 0.5);
+  --shadow-neon-red: 0 0 10px rgba(239, 68, 68, 0.5);
+
+  /* 4. ANIMATION (Optional - Hiệu ứng nhấp nháy con trỏ terminal) */
+  --animate-cursor: cursor 0.75s step-end infinite;
+
+  @keyframes cursor {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+/* Reset CSS cơ bản cho Dark Mode */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-background text-terminal font-sans antialiased;
+  /* antialiased giúp chữ mảnh và sắc nét hơn trên nền đen */
+}
+
+/* Class tiện ích custom (nếu cần dùng @apply) */
+.font-cyber {
+  @apply font-mono;
+}
