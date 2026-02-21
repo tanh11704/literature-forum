@@ -39,6 +39,15 @@ Follow these instructions strictly when generating code or refactoring.
 
 ## 4. Implementation Guidelines
 
+### Entity Relationships (Manual FK — No JPA Annotations)
+- **DO NOT** use `@ManyToOne`, `@OneToMany`, `@ManyToMany`, `@OneToOne` on new module Entities.
+- Store foreign keys as **raw `UUID` fields** (e.g., `private UUID creatorId` instead of `@ManyToOne User creator`).
+- Enforce FK constraints at the **database level** (Flyway migration with `REFERENCES`).
+- Resolve relationships **manually in the Service layer** — query each repository separately when join data is needed.
+- Response DTOs may contain nested/derived fields (e.g., `creatorName`) populated by the Service or Controller layer.
+- Entity classes use suffix `Entity` (e.g., `TopicEntity`) to distinguish from Domain Models (e.g., `Topic`).
+- **Legacy note**: Existing `auth` module entities (`User`, `RefreshToken`, `SocialAccount`) still use JPA relationship annotations — do not refactor them.
+
 ### Controller Layer (Interface Layer)
 - **Role**: Entry point for HTTP requests.
 - **Data**: Accepts **DTOs** (`RequestDTO`). Returns **DTOs** (`ResponseDTO`).
