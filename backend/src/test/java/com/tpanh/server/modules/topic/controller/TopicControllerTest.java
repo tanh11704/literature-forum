@@ -38,6 +38,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.springframework.core.MethodParameter;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
+
 @ExtendWith(MockitoExtension.class)
 class TopicControllerTest {
 
@@ -65,6 +71,19 @@ class TopicControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(topicController)
                 .setControllerAdvice(new GlobalExceptionHandler())
+                .addPlaceholderValue("application.api.prefix", "/api/v1")
+                .setCustomArgumentResolvers(new HandlerMethodArgumentResolver() {
+                    @Override
+                    public boolean supportsParameter(MethodParameter parameter) {
+                        return parameter.getParameterType().isAssignableFrom(CustomUserDetails.class);
+                    }
+
+                    @Override
+                    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+                                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+                        return userDetails;
+                    }
+                })
                 .build();
 
         topicId = UUID.randomUUID();
