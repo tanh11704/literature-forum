@@ -1,6 +1,5 @@
 package com.tpanh.server.modules.topic.service.impl;
 
-import com.tpanh.server.common.domain.PageResult;
 import com.tpanh.server.common.exception.BusinessLogicException;
 import com.tpanh.server.common.exception.ResourceNotFoundException;
 import com.tpanh.server.modules.topic.domain.Topic;
@@ -17,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
