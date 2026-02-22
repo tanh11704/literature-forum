@@ -49,12 +49,12 @@ public class SubmissionController {
             @RequestBody @Valid CreateSubmissionRequestDto request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         var authorId = userDetails.getUser().getId();
-        var submission = CreateSubmissionRequestDto.toDomain(request, authorId);
-        var created = submissionService.createSubmission(submission);
 
-        var authorName = userDetails.getUser().getFullName();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(SubmissionResponseDto.fromDomain(created, authorName));
+                .body(SubmissionResponseDto.fromDomain(
+                        submissionService.createSubmission(
+                                CreateSubmissionRequestDto.toDomain(request, authorId)),
+                        userDetails.getUser().getFullName()));
     }
 
     @GetMapping("/my")
@@ -65,8 +65,8 @@ public class SubmissionController {
         var authorId = userDetails.getUser().getId();
         var result = submissionService.getSubmissionsByAuthor(authorId, page, size);
 
-        var authorName = userDetails.getUser().getFullName();
-        var dtoPage = result.map(sub -> SubmissionSummaryResponseDto.fromDomain(sub, authorName));
+        var dtoPage = result.map(
+                submission -> SubmissionSummaryResponseDto.fromDomain(submission, userDetails.getUser().getFullName()));
         return ResponseEntity.ok(PageResponseDto.fromDomain(dtoPage));
     }
 
