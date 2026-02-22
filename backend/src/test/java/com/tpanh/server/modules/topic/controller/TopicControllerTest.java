@@ -10,9 +10,13 @@ import com.tpanh.server.modules.auth.enums.Role;
 import com.tpanh.server.modules.auth.security.CustomUserDetails;
 import com.tpanh.server.modules.auth.service.UserService;
 import com.tpanh.server.modules.topic.domain.Topic;
-import com.tpanh.server.modules.topic.dto.CreateTopicRequest;
-import com.tpanh.server.modules.topic.dto.UpdateTopicRequest;
+import com.tpanh.server.modules.topic.domain.UpdateTopic;
+import com.tpanh.server.modules.topic.dto.CreateTopicRequestDto;
+import com.tpanh.server.modules.topic.dto.TopicResponseDto;
+import com.tpanh.server.modules.topic.dto.TopicSummaryResponseDto;
+import com.tpanh.server.modules.topic.dto.UpdateTopicRequestDto;
 import com.tpanh.server.modules.topic.enums.TopicStatus;
+import com.tpanh.server.modules.topic.mapper.TopicMapper;
 import com.tpanh.server.modules.topic.service.TopicService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +58,9 @@ class TopicControllerTest {
 
     @Mock
     private UserService userService;
+
+    @Mock
+    private TopicMapper topicMapper;
 
     @InjectMocks
     private TopicController topicController;
@@ -117,6 +124,31 @@ class TopicControllerTest {
                 .status(TopicStatus.PUBLISHED)
                 .createdAt(Instant.now())
                 .build();
+
+        lenient().when(topicMapper.toDomain(any(CreateTopicRequestDto.class), any(UUID.class))).thenAnswer(invocation -> {
+            CreateTopicRequestDto req = invocation.getArgument(0);
+            UUID cId = invocation.getArgument(1);
+            return Topic.builder()
+                    .creatorId(cId)
+                    .title(req.title())
+                    .content(req.content())
+                    .status(TopicStatus.DRAFT)
+                    .build();
+        });
+
+        lenient().when(topicMapper.toResponse(any(Topic.class), anyString())).thenAnswer(invocation -> {
+            Topic t = invocation.getArgument(0);
+            String name = invocation.getArgument(1);
+            return new TopicResponseDto(t.getId(), t.getCreatorId(), name, t.getTitle(), t.getContent(),
+                    t.getStatus().name(), t.getCreatedAt(), t.getUpdatedAt());
+        });
+
+        lenient().when(topicMapper.toSummaryResponse(any(Topic.class), anyString())).thenAnswer(invocation -> {
+            Topic t = invocation.getArgument(0);
+            String name = invocation.getArgument(1);
+            return new TopicSummaryResponseDto(t.getId(), t.getCreatorId(), name, t.getTitle(),
+                    t.getStatus().name(), t.getCreatedAt());
+        });
     }
 
     @Nested
@@ -214,7 +246,7 @@ class TopicControllerTest {
         void shouldCreateTopic() throws Exception {
             when(topicService.createTopic(any(Topic.class))).thenReturn(draftTopic);
 
-            var requestBody = new CreateTopicRequest("Test Topic", "Test Content");
+            var requestBody = new CreateTopicRequestDto("Test Topic", "Test Content");
 
             mockMvc.perform(post("/api/v1/topics")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -232,25 +264,32 @@ class TopicControllerTest {
         @Test
         @DisplayName("Should update topic successfully")
         void shouldUpdateTopic() throws Exception {
-            when(topicService.updateTopic(eq(topicId), eq(creatorId), eq("Updated Title"), eq("Updated Content")))
+            when(topicMapper.toUpdateDomain(any(UpdateTopicRequestDto.class))).thenReturn(
+                    UpdateTopic.builder().title("Updated Title").content("Updated Content").build());
+            when(topicService.updateTopic(eq(topicId), eq(creatorId), any(UpdateTopic.class)))
                     .thenReturn(draftTopic);
 
-            var requestBody = new UpdateTopicRequest("Updated Title", "Updated Content");
+            var requestBody = new UpdateTopicRequestDto("Updated Title", "Updated Content");
 
             mockMvc.perform(put("/api/v1/topics/{id}", topicId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(requestBody))
                             .requestAttr("org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver.AUTHENTICATION_PRINCIPAL", userDetails))
                     .andExpect(status().isOk());
+
+            verify(topicMapper).toUpdateDomain(any(UpdateTopicRequestDto.class));
+            verify(topicService).updateTopic(eq(topicId), eq(creatorId), any(UpdateTopic.class));
         }
 
         @Test
         @DisplayName("Should return 400 when not owner")
         void shouldReturn400WhenNotOwner() throws Exception {
-            when(topicService.updateTopic(eq(topicId), eq(creatorId), any(), any()))
+            when(topicMapper.toUpdateDomain(any(UpdateTopicRequestDto.class))).thenReturn(
+                    UpdateTopic.builder().title("Title").content("Content").build());
+            when(topicService.updateTopic(eq(topicId), eq(creatorId), any(UpdateTopic.class)))
                     .thenThrow(new BusinessLogicException("You are not the owner of this topic"));
 
-            var requestBody = new UpdateTopicRequest("Title", "Content");
+            var requestBody = new UpdateTopicRequestDto("Title", "Content");
 
             mockMvc.perform(put("/api/v1/topics/{id}", topicId)
                             .contentType(MediaType.APPLICATION_JSON)
