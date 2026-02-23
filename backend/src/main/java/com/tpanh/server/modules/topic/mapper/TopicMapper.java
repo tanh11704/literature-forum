@@ -43,9 +43,6 @@ public interface TopicMapper {
 
     UpdateTopic toUpdateDomain(UpdateTopicRequestDto dto);
 
-
-    // ── Partial Update (skip null & blank) ───────────────────────────
-
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "creatorId", ignore = true)
