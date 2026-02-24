@@ -1,7 +1,6 @@
 package com.tpanh.server.modules.topic.domain;
 
 import com.tpanh.server.common.exception.BusinessLogicException;
-import com.tpanh.server.modules.topic.entity.TopicEntity;
 import com.tpanh.server.modules.topic.enums.TopicStatus;
 import lombok.*;
 
@@ -68,27 +67,5 @@ public class Topic {
             throw new BusinessLogicException("Topic is already disabled");
         }
         this.status = TopicStatus.DISABLED;
-    }
-
-    public static TopicEntity toEntity(Topic topic) {
-        return TopicEntity.builder()
-                .id(topic.getId())
-                .creatorId(topic.getCreatorId())
-                .title(topic.getTitle())
-                .content(topic.getContent())
-                .status(topic.getStatus())
-                .build();
-    }
-
-    public static Topic fromEntity(TopicEntity entity) {
-        return Topic.builder()
-                .id(entity.getId())
-                .creatorId(entity.getCreatorId())
-                .title(entity.getTitle())
-                .content(entity.getContent())
-                .status(entity.getStatus())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
     }
 }

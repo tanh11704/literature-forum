@@ -1,6 +1,6 @@
 package com.tpanh.server.modules.topic.dto;
 
-public record UpdateTopicRequest(
+public record CreateTopicRequestDto(
         String title,
         String content
 ) {
