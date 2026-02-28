@@ -2,6 +2,7 @@ package com.tpanh.server.modules.topic.service;
 
 import com.tpanh.server.common.domain.PageResult;
 import com.tpanh.server.modules.topic.domain.Topic;
+import com.tpanh.server.modules.topic.domain.UpdateTopic;
 import com.tpanh.server.modules.topic.enums.TopicStatus;
 
 import java.util.UUID;
@@ -12,7 +13,7 @@ public interface TopicService {
 
     Topic getTopicById(UUID id);
 
-    Topic updateTopic(UUID topicId, UUID requesterId, String title, String content);
+    Topic updateTopic(UUID topicId, UUID requesterId, UpdateTopic updateTopic);
 
     void deleteTopic(UUID topicId, UUID requesterId);
 

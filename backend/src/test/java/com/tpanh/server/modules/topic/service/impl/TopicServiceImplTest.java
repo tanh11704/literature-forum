@@ -3,8 +3,10 @@ package com.tpanh.server.modules.topic.service.impl;
 import com.tpanh.server.common.exception.BusinessLogicException;
 import com.tpanh.server.common.exception.ResourceNotFoundException;
 import com.tpanh.server.modules.topic.domain.Topic;
+import com.tpanh.server.modules.topic.domain.UpdateTopic;
 import com.tpanh.server.modules.topic.entity.TopicEntity;
 import com.tpanh.server.modules.topic.enums.TopicStatus;
+import com.tpanh.server.modules.topic.mapper.TopicMapper;
 import com.tpanh.server.modules.topic.repository.TopicRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,6 +35,9 @@ class TopicServiceImplTest {
 
     @Mock
     private TopicRepository topicRepository;
+
+    @Mock
+    private TopicMapper topicMapper;
 
     @InjectMocks
     private TopicServiceImpl topicService;
@@ -76,6 +81,30 @@ class TopicServiceImplTest {
                 .status(TopicStatus.PENDING_APPROVE)
                 .createdAt(Instant.now())
                 .build();
+
+        lenient().when(topicMapper.fromEntity(any(TopicEntity.class))).thenAnswer(invocation -> {
+            TopicEntity entity = invocation.getArgument(0);
+            return Topic.builder()
+                    .id(entity.getId())
+                    .creatorId(entity.getCreatorId())
+                    .title(entity.getTitle())
+                    .content(entity.getContent())
+                    .status(entity.getStatus())
+                    .createdAt(entity.getCreatedAt())
+                    .updatedAt(entity.getUpdatedAt())
+                    .build();
+        });
+
+        lenient().when(topicMapper.toEntity(any(Topic.class))).thenAnswer(invocation -> {
+            Topic topic = invocation.getArgument(0);
+            return TopicEntity.builder()
+                    .id(topic.getId())
+                    .creatorId(topic.getCreatorId())
+                    .title(topic.getTitle())
+                    .content(topic.getContent())
+                    .status(topic.getStatus())
+                    .build();
+        });
     }
 
     @Nested
@@ -151,53 +180,54 @@ class TopicServiceImplTest {
         @DisplayName("Should update title and content when both provided")
         void shouldUpdateTitleAndContent() {
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(draftEntity));
-            when(topicRepository.save(any(TopicEntity.class))).thenReturn(draftEntity);
+            var update = UpdateTopic.builder().title("Updated Title").content("Updated Content").build();
 
-            var result = topicService.updateTopic(topicId, creatorId, "Updated Title", "Updated Content");
+            var result = topicService.updateTopic(topicId, creatorId, update);
 
             assertThat(result).isNotNull();
-            verify(topicRepository).save(any(TopicEntity.class));
+            verify(topicMapper).updateEntity(eq(update), eq(draftEntity));
         }
 
         @Test
         @DisplayName("Should update only title when content is null")
         void shouldUpdateOnlyTitle() {
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(draftEntity));
-            when(topicRepository.save(any(TopicEntity.class))).thenReturn(draftEntity);
+            var update = UpdateTopic.builder().title("Updated Title").build();
 
-            topicService.updateTopic(topicId, creatorId, "Updated Title", null);
+            topicService.updateTopic(topicId, creatorId, update);
 
-            verify(topicRepository).save(any(TopicEntity.class));
+            verify(topicMapper).updateEntity(eq(update), eq(draftEntity));
         }
 
         @Test
         @DisplayName("Should update only content when title is null")
         void shouldUpdateOnlyContent() {
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(draftEntity));
-            when(topicRepository.save(any(TopicEntity.class))).thenReturn(draftEntity);
+            var update = UpdateTopic.builder().content("Updated Content").build();
 
-            topicService.updateTopic(topicId, creatorId, null, "Updated Content");
+            topicService.updateTopic(topicId, creatorId, update);
 
-            verify(topicRepository).save(any(TopicEntity.class));
+            verify(topicMapper).updateEntity(eq(update), eq(draftEntity));
         }
 
         @Test
         @DisplayName("Should skip blank title")
         void shouldSkipBlankTitle() {
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(draftEntity));
-            when(topicRepository.save(any(TopicEntity.class))).thenReturn(draftEntity);
+            var update = UpdateTopic.builder().title("   ").content("Updated Content").build();
 
-            topicService.updateTopic(topicId, creatorId, "   ", "Updated Content");
+            topicService.updateTopic(topicId, creatorId, update);
 
-            verify(topicRepository).save(any(TopicEntity.class));
+            verify(topicMapper).updateEntity(eq(update), eq(draftEntity));
         }
 
         @Test
         @DisplayName("Should throw when requester is not the owner")
         void shouldThrowWhenNotOwner() {
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(draftEntity));
+            var update = UpdateTopic.builder().title("Title").content("Content").build();
 
-            assertThatThrownBy(() -> topicService.updateTopic(topicId, otherUserId, "Title", "Content"))
+            assertThatThrownBy(() -> topicService.updateTopic(topicId, otherUserId, update))
                     .isInstanceOf(BusinessLogicException.class)
                     .hasMessageContaining("not the owner");
         }
@@ -206,8 +236,9 @@ class TopicServiceImplTest {
         @DisplayName("Should throw when topic is not editable (PUBLISHED)")
         void shouldThrowWhenNotEditable() {
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(publishedEntity));
+            var update = UpdateTopic.builder().title("Title").content("Content").build();
 
-            assertThatThrownBy(() -> topicService.updateTopic(topicId, creatorId, "Title", "Content"))
+            assertThatThrownBy(() -> topicService.updateTopic(topicId, creatorId, update))
                     .isInstanceOf(BusinessLogicException.class)
                     .hasMessageContaining("DRAFT or REJECTED");
         }
@@ -225,12 +256,12 @@ class TopicServiceImplTest {
                     .build();
 
             when(topicRepository.findById(topicId)).thenReturn(Optional.of(rejectedEntity));
-            when(topicRepository.save(any(TopicEntity.class))).thenReturn(rejectedEntity);
+            var update = UpdateTopic.builder().title("Fixed Title").content("Fixed Content").build();
 
-            var result = topicService.updateTopic(topicId, creatorId, "Fixed Title", "Fixed Content");
+            var result = topicService.updateTopic(topicId, creatorId, update);
 
             assertThat(result).isNotNull();
-            verify(topicRepository).save(any(TopicEntity.class));
+            verify(topicMapper).updateEntity(eq(update), eq(rejectedEntity));
         }
     }
 

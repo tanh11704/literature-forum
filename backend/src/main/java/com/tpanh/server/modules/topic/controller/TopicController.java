@@ -5,11 +5,12 @@ import com.tpanh.server.common.dto.PageResponseDto;
 import com.tpanh.server.modules.auth.security.CustomUserDetails;
 import com.tpanh.server.modules.auth.service.UserService;
 import com.tpanh.server.modules.topic.domain.Topic;
-import com.tpanh.server.modules.topic.dto.CreateTopicRequest;
-import com.tpanh.server.modules.topic.dto.TopicResponse;
-import com.tpanh.server.modules.topic.dto.TopicSummaryResponse;
-import com.tpanh.server.modules.topic.dto.UpdateTopicRequest;
+import com.tpanh.server.modules.topic.dto.CreateTopicRequestDto;
+import com.tpanh.server.modules.topic.dto.TopicResponseDto;
+import com.tpanh.server.modules.topic.dto.TopicSummaryResponseDto;
+import com.tpanh.server.modules.topic.dto.UpdateTopicRequestDto;
 import com.tpanh.server.modules.topic.enums.TopicStatus;
+import com.tpanh.server.modules.topic.mapper.TopicMapper;
 import com.tpanh.server.modules.topic.service.TopicService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,35 +29,35 @@ public class TopicController {
 
     private final TopicService topicService;
     private final UserService userService;
+    private final TopicMapper topicMapper;
 
     @GetMapping
-    public ResponseEntity<PageResponseDto<TopicSummaryResponse>> getPublishedTopics(
+    public ResponseEntity<PageResponseDto<TopicSummaryResponseDto>> getPublishedTopics(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        var result = topicService.getPublishedTopics(page, size);
-        return ResponseEntity.ok(toSummaryPage(result));
+        return ResponseEntity.ok(toSummaryPage(topicService.getPublishedTopics(page, size)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TopicResponse> getTopicById(@PathVariable UUID id) {
+    public ResponseEntity<TopicResponseDto> getTopicById(@PathVariable UUID id) {
         var topic = topicService.getTopicById(id);
         var creatorName = userService.getFullNameById(topic.getCreatorId());
-        return ResponseEntity.ok(TopicResponse.fromDomain(topic, creatorName));
+        return ResponseEntity.ok(topicMapper.toResponse(topic, creatorName));
     }
 
     @PostMapping
-    public ResponseEntity<TopicResponse> createTopic(
-            @RequestBody @Valid CreateTopicRequest request,
+    public ResponseEntity<TopicResponseDto> createTopic(
+            @RequestBody @Valid CreateTopicRequestDto request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         var userId = userDetails.getUser().getId();
-        var topic = CreateTopicRequest.toDomain(request, userId);
+        var topic = topicMapper.toDomain(request, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(TopicResponse.fromDomain(topicService.createTopic(topic), userDetails.getUser().getFullName()));
+                .body(topicMapper.toResponse(topicService.createTopic(topic), userDetails.getUser().getFullName()));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<PageResponseDto<TopicSummaryResponse>> getMyTopics(
+    public ResponseEntity<PageResponseDto<TopicSummaryResponseDto>> getMyTopics(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -64,20 +65,21 @@ public class TopicController {
         var creatorName = userDetails.getUser().getFullName();
         var result = topicService.getTopicsByCreator(userId, page, size);
 
-        var dtoPage = result.map(topic -> TopicSummaryResponse.fromDomain(topic, creatorName));
+        var dtoPage = result.map(topic -> topicMapper.toSummaryResponse(topic, creatorName));
 
         return ResponseEntity.ok(PageResponseDto.fromDomain(dtoPage));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TopicResponse> updateTopic(
+    public ResponseEntity<TopicResponseDto> updateTopic(
             @PathVariable UUID id,
-            @RequestBody UpdateTopicRequest request,
+            @RequestBody UpdateTopicRequestDto request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         var userId = userDetails.getUser().getId();
-        var updated = topicService.updateTopic(id, userId, request.title(), request.content());
+        var updateTopic = topicMapper.toUpdateDomain(request);
+        var updated = topicService.updateTopic(id, userId, updateTopic);
         var creatorName = userDetails.getUser().getFullName();
-        return ResponseEntity.ok(TopicResponse.fromDomain(updated, creatorName));
+        return ResponseEntity.ok(topicMapper.toResponse(updated, creatorName));
     }
 
     @DeleteMapping("/{id}")
@@ -128,7 +130,7 @@ public class TopicController {
 
     @GetMapping("/status/{status}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponseDto<TopicSummaryResponse>> getTopicsByStatus(
+    public ResponseEntity<PageResponseDto<TopicSummaryResponseDto>> getTopicsByStatus(
             @PathVariable TopicStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -136,14 +138,14 @@ public class TopicController {
         return ResponseEntity.ok(toSummaryPage(result));
     }
 
-    private PageResponseDto<TopicSummaryResponse> toSummaryPage(PageResult<Topic> result) {
+    private PageResponseDto<TopicSummaryResponseDto> toSummaryPage(PageResult<Topic> result) {
         var creatorIds = result.content().stream()
                 .map(Topic::getCreatorId)
                 .distinct()
                 .toList();
         var creatorNames = userService.getFullNamesByIds(creatorIds);
 
-        var dtoPage = result.map(topic -> TopicSummaryResponse.fromDomain(topic,
+        var dtoPage = result.map(topic -> topicMapper.toSummaryResponse(topic,
                 creatorNames.getOrDefault(topic.getCreatorId(), "Unknown")));
 
         return PageResponseDto.fromDomain(dtoPage);

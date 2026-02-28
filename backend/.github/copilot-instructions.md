@@ -80,18 +80,19 @@ Follow these instructions strictly when generating code or refactoring.
 
 ### Domain Model (Core)
 - Pure Java Objects (POJOs) containing business logic.
-- **Pragmatic DDD**: Include `toEntity()` and `static fromEntity()` methods to centralize mapping logic.
-- **No framework annotations** (`@Entity`, `@Table`) on fields, but may depend on Entity classes for conversion.
+- **No framework annotations** (`@Entity`, `@Table`) on fields.
 
-### Mapping Strategy (Self-Contained Mapping)
-- **Principle**: Each layer's data object knows how to convert itself to/from the adjacent layer.
-- **DTOs (Controller Layer)**:
-  - `toDomain()`: Instance method to convert DTO -> Domain Model.
-  - `static fromDomain(Domain model)`: Static method to create DTO from Domain Model.
-- **Domain Models (Core Layer)**:
-  - `toEntity()`: Instance method to convert Domain Model -> JPA Entity.
-  - `static fromEntity(Entity entity)`: Static method to create Domain Model from JPA Entity.
-- No external Mappers (MapStruct) required. Logic is encapsulated in the data classes.
+### Mapping Strategy (MapStruct)
+- **Principle**: Use **MapStruct** for all object mapping (Entity <-> Domain <-> DTO).
+- **Location**: Create a `mapper` package in each module (e.g., `com.tpanh.server.modules.topic.mapper`).
+- **Configuration**: Use `@Mapper(componentModel = "spring")` so mappers can be injected via Spring.
+- **Methods**:
+  - `toEntity(Domain domain)`: Domain -> Entity.
+  - `fromEntity(Entity entity)`: Entity -> Domain.
+  - `toDomain(RequestDTO dto, ...)`: DTO -> Domain.
+  - `toResponse(Domain domain, ...)`: Domain -> ResponseDTO.
+  - `updateEntity(UpdateDomain source, @MappingTarget Entity target)`: For partial updates using `@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)`.
+- **Do not** write manual `toEntity()` or `fromEntity()` methods inside the Domain or Entity classes.
 
 ### DTOs (Data Transfer Objects)
 - Prefer `record` for immutable DTOs (Java 14+).
@@ -148,3 +149,8 @@ public class UserServiceImpl implements UserService {
     }
 }
 ```
+
+## 10. Project Plan & Progress
+- Always read the `.github/implementation-plan.md` file to understand the current project status, pending tasks, and architectural decisions before starting any new implementation.
+- Follow the module breakdown strictly. Do not implement multiple modules at once.
+
