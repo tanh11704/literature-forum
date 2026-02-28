@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/topics", "/api/v1/topics/{id}").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/topics/{topicId}/submissions").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
