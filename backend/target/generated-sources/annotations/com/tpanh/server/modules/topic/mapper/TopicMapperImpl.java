@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-23T20:49:18+0700",
-    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260128-0750, environment: Java 21.0.9 (Eclipse Adoptium)"
+    date = "2026-02-27T09:50:56+0700",
+    comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
 public class TopicMapperImpl implements TopicMapper {
@@ -29,15 +29,15 @@ public class TopicMapperImpl implements TopicMapper {
 
         TopicEntity.TopicEntityBuilder topicEntity = TopicEntity.builder();
 
-        topicEntity.id( topic.getId() );
-        topicEntity.creatorId( topic.getCreatorId() );
-        if ( isNotBlank( topic.getTitle() ) ) {
-            topicEntity.title( topic.getTitle() );
-        }
         if ( isNotBlank( topic.getContent() ) ) {
             topicEntity.content( topic.getContent() );
         }
+        topicEntity.creatorId( topic.getCreatorId() );
+        topicEntity.id( topic.getId() );
         topicEntity.status( topic.getStatus() );
+        if ( isNotBlank( topic.getTitle() ) ) {
+            topicEntity.title( topic.getTitle() );
+        }
 
         return topicEntity.build();
     }
@@ -50,16 +50,16 @@ public class TopicMapperImpl implements TopicMapper {
 
         Topic.TopicBuilder topic = Topic.builder();
 
-        topic.id( entity.getId() );
-        topic.creatorId( entity.getCreatorId() );
-        if ( isNotBlank( entity.getTitle() ) ) {
-            topic.title( entity.getTitle() );
-        }
         if ( isNotBlank( entity.getContent() ) ) {
             topic.content( entity.getContent() );
         }
-        topic.status( entity.getStatus() );
         topic.createdAt( entity.getCreatedAt() );
+        topic.creatorId( entity.getCreatorId() );
+        topic.id( entity.getId() );
+        topic.status( entity.getStatus() );
+        if ( isNotBlank( entity.getTitle() ) ) {
+            topic.title( entity.getTitle() );
+        }
         topic.updatedAt( entity.getUpdatedAt() );
 
         return topic.build();
@@ -191,11 +191,11 @@ public class TopicMapperImpl implements TopicMapper {
             return;
         }
 
-        if ( isNotBlank( source.getTitle() ) ) {
-            target.setTitle( source.getTitle() );
-        }
         if ( isNotBlank( source.getContent() ) ) {
             target.setContent( source.getContent() );
+        }
+        if ( isNotBlank( source.getTitle() ) ) {
+            target.setTitle( source.getTitle() );
         }
     }
 }
