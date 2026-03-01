@@ -2,6 +2,7 @@ package com.tpanh.server.modules.submission.dto;
 
 import com.tpanh.server.modules.submission.domain.Submission;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,8 +16,9 @@ public record SubmissionResponseDto(
         String content,
         String status,
         Instant createdAt,
-        Instant updatedAt
-) {
+        Instant updatedAt,
+        BigDecimal avgScore,
+        Integer ratingCount) {
     public static SubmissionResponseDto fromDomain(Submission submission, String authorName) {
         return new SubmissionResponseDto(
                 submission.getId(),
@@ -28,7 +30,8 @@ public record SubmissionResponseDto(
                 submission.getContent(),
                 submission.getStatus().name(),
                 submission.getCreatedAt(),
-                submission.getUpdatedAt()
-        );
+                submission.getUpdatedAt(),
+                submission.getAvgScore(),
+                submission.getRatingCount());
     }
 }
