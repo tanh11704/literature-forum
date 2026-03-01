@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
@@ -90,6 +91,17 @@ public class SubmissionServiceImpl implements SubmissionService {
         var submissionEntity = getSubmissionEntityById(submissionId);
 
         submissionEntity.setStatus(SubmissionStatus.REJECTED);
+
+        submissionRepository.save(submissionEntity);
+    }
+
+    @Override
+    @Transactional
+    public void updateRatingSummary(UUID submissionId, BigDecimal avgScore, int ratingCount) {
+        var submissionEntity = getSubmissionEntityById(submissionId);
+
+        submissionEntity.setAvgScore(avgScore);
+        submissionEntity.setRatingCount(ratingCount);
 
         submissionRepository.save(submissionEntity);
     }

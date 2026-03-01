@@ -5,6 +5,7 @@ import com.tpanh.server.modules.submission.domain.Submission;
 import com.tpanh.server.modules.submission.domain.UpdateSubmissionRequest;
 import com.tpanh.server.modules.submission.enums.SubmissionStatus;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface SubmissionService {
@@ -22,6 +23,8 @@ public interface SubmissionService {
     void approveSubmission(UUID submissionId);
 
     void rejectSubmission(UUID submissionId);
+
+    void updateRatingSummary(UUID submissionId, BigDecimal avgScore, int ratingCount);
 
     PageResult<Submission> getApprovedSubmissionsByTopic(UUID topicId, int page, int size);
 

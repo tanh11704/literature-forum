@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-02-27T09:50:56+0700",
+    date = "2026-03-01T07:51:40+0700",
     comments = "version: 1.5.5.Final, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)"
 )
 @Component
@@ -175,11 +175,11 @@ public class TopicMapperImpl implements TopicMapper {
 
         UpdateTopic.UpdateTopicBuilder updateTopic = UpdateTopic.builder();
 
-        if ( isNotBlank( dto.title() ) ) {
-            updateTopic.title( dto.title() );
-        }
         if ( isNotBlank( dto.content() ) ) {
             updateTopic.content( dto.content() );
+        }
+        if ( isNotBlank( dto.title() ) ) {
+            updateTopic.title( dto.title() );
         }
 
         return updateTopic.build();
